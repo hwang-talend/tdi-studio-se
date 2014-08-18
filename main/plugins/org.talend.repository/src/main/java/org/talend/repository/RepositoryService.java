@@ -37,6 +37,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
@@ -44,6 +45,7 @@ import org.eclipse.ui.PlatformUI;
 import org.talend.commons.exception.BusinessException;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.exception.LoginException;
+import org.talend.commons.exception.OperationCancelException;
 import org.talend.commons.exception.PersistenceException;
 import org.talend.commons.exception.SystemException;
 import org.talend.commons.model.components.IComponentConstants;
@@ -433,8 +435,20 @@ public class RepositoryService implements IRepositoryService, IRepositoryContext
                 repositoryContext.setProject(project);
 
                 repositoryFactory.logOnProject(project, new NullProgressMonitor());
-            } catch (PersistenceException e) {
-                MessageBoxExceptionHandler.process(e, new Shell());
+            } catch (final PersistenceException e) {
+                if (e instanceof OperationCancelException) {
+                    Display.getDefault().syncExec(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            MessageDialog.openError(Display.getDefault().getActiveShell(),
+                                    Messages.getString("LoginDialog.logonCanceled"), e.getLocalizedMessage());
+                        }
+
+                    });
+                } else {
+                    MessageBoxExceptionHandler.process(e, new Shell());
+                }
                 repositoryFactory.logOffProject();
                 return false;
             } catch (LoginException e) {
