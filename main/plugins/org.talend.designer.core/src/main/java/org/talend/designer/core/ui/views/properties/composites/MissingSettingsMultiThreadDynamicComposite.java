@@ -20,6 +20,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.talend.commons.ui.swt.composites.MessagesComposite;
+import org.talend.commons.ui.swt.composites.MessagesWithActionComposite;
 import org.talend.core.model.components.IComponent;
 import org.talend.core.model.general.ModuleNeeded;
 import org.talend.core.model.process.EComponentCategory;
