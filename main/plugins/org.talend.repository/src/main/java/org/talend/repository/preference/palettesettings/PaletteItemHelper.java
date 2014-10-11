@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.runtime.AssertionFailedException;
 import org.talend.core.model.components.ComponentCategory;
 import org.talend.core.model.components.EComponentType;
 import org.talend.core.model.components.IComponent;
@@ -24,7 +25,7 @@ import org.talend.repository.model.ComponentsFactoryProvider;
 
 /**
  * created by nrousseau on Aug 11, 2014 Detailled comment
- *
+ * 
  */
 public class PaletteItemHelper {
 
@@ -62,10 +63,12 @@ public class PaletteItemHelper {
         for (int i = 0; i < originalFamilies.length; i++) {
             String origFamily = originalFamilies[i];
             String translFamily = translatedFamilies[i];
-            IPaletteItem parentPaletteItem = getFamilyItem(translFamily, rootPaletteItem);
-            IPaletteItem componentItem = new ComponentPaletteItem(component, origFamily);
-            parentPaletteItem.getChildren().add(componentItem);
-            componentItem.setParent(parentPaletteItem);
+            if (rootPaletteItem != null) {
+                IPaletteItem parentPaletteItem = getFamilyItem(translFamily, rootPaletteItem);
+                IPaletteItem componentItem = new ComponentPaletteItem(component, origFamily);
+                parentPaletteItem.getChildren().add(componentItem);
+                componentItem.setParent(parentPaletteItem);
+            }
         }
     }
 
@@ -82,9 +85,14 @@ public class PaletteItemHelper {
                 return paletteItem;
             }
         }
-        IPaletteItem rootPaletteItem = new RootPaletteItem(category);
-        paletteItems.add(rootPaletteItem);
-        return rootPaletteItem;
+        try {
+            IPaletteItem rootPaletteItem = new RootPaletteItem(category);
+            paletteItems.add(rootPaletteItem);
+            return rootPaletteItem;
+        } catch (AssertionFailedException e) {
+            // if go here,means can not get the paletteItem for the componentCatgory,just return null
+            return null;
+        }
     }
 
     /**

@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.repository.preference.palettesettings;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.talend.core.model.components.ComponentCategory;
 import org.talend.core.model.repository.ERepositoryObjectType;
@@ -20,38 +21,31 @@ import org.talend.designer.components.preference.provider.IPaletteItem;
 
 /**
  * created by nrousseau on Aug 11, 2014 Detailled comment
- *
+ * 
  */
 public class RootPaletteItem extends AbstractPaletteItem implements IPaletteItem {
 
     public RootPaletteItem(ComponentCategory category) {
         setCategory(category);
-        ImageDescriptor imageDesc;
         ERepositoryObjectType type;
         switch (category) {
         case CATEGORY_4_CAMEL:
             type = ERepositoryObjectType.valueOf("ROUTES");
-            imageDesc = CoreImageProvider.getImageDesc(type);
-            setLabel(type.getLabel());
             break;
         case CATEGORY_4_MAPREDUCE:
             type = ERepositoryObjectType.valueOf("PROCESS_MR");
-            imageDesc = CoreImageProvider.getImageDesc(type);
-            imageDesc = CoreImageProvider.getImageDesc(type);
-            setLabel(type.getLabel());
             break;
         case CATEGORY_4_STORM:
             type = ERepositoryObjectType.valueOf("PROCESS_STORM");
-            imageDesc = CoreImageProvider.getImageDesc(type);
-            setLabel(type.getLabel());
             break;
         case CATEGORY_4_DI:
         default:
             type = ERepositoryObjectType.PROCESS;
-            imageDesc = CoreImageProvider.getImageDesc(type);
-            setLabel(type.getLabel());
             break;
         }
+        Assert.isNotNull(type);
+        setLabel(type.getLabel());
+        ImageDescriptor imageDesc = CoreImageProvider.getImageDesc(type);
         setImageDesc(imageDesc);
     }
 }
