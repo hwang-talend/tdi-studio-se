@@ -60,10 +60,10 @@ public class PaletteItemHelper {
         }
         IPaletteItem rootPaletteItem = getRootPaletteItem(
                 ComponentCategory.getComponentCategoryFromName(component.getPaletteType()), paletteItems);
-        for (int i = 0; i < originalFamilies.length; i++) {
-            String origFamily = originalFamilies[i];
-            String translFamily = translatedFamilies[i];
-            if (rootPaletteItem != null) {
+        if (rootPaletteItem != null) {
+            for (int i = 0; i < originalFamilies.length; i++) {
+                String origFamily = originalFamilies[i];
+                String translFamily = translatedFamilies[i];
                 IPaletteItem parentPaletteItem = getFamilyItem(translFamily, rootPaletteItem);
                 IPaletteItem componentItem = new ComponentPaletteItem(component, origFamily);
                 parentPaletteItem.getChildren().add(componentItem);
