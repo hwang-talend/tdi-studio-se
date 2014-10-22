@@ -7,6 +7,7 @@ imports="
     org.talend.core.model.process.IConnection
     org.talend.designer.codegen.config.CodeGeneratorArgument
     org.talend.core.model.process.IConnectionCategory
+    org.talend.core.model.utils.NodeUtil
     java.util.List
 " 
 class="MomInput"
@@ -17,9 +18,16 @@ class="MomInput"
 	CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
 	INode node = (INode)codeGenArgument.getArgument();
 	String cid = node.getUniqueName();
+	boolean isExistConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
+	String connection = ElementParameterParser.getValue(node, "__CONNECTION__");
 	String serverType=ElementParameterParser.getValue(node, "__SERVER__");
+	if(isExistConnection){
+    	INode connectionComponent = NodeUtil.getNodeByUniqueName(node.getProcess(),connection);
+    	serverType=ElementParameterParser.getValue(connectionComponent, "__SERVER__");
+    }
 	String host=ElementParameterParser.getValue(node, "__SERVERADDRESS__");
 	String port=ElementParameterParser.getValue(node, "__SERVERPORT__");
+	String dbuser= ElementParameterParser.getValue(node, "__USER__");
 	final boolean isLog4jEnabled = ("true").equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
 	
 	IMetadataTable metadata=null;
@@ -30,198 +38,47 @@ class="MomInput"
 
 %>
 	int nb_line_<%=cid%> = 0;
-<%
-	if(("JBoss").equals(serverType)){ // server judgement
-		String msgType = ElementParameterParser.getValue(node, "__MSGTYPE__");
-		String from=ElementParameterParser.getValue(node, "__FROM__");
-
-%>
-		class HelloInput implements javax.jms.MessageListener {
-			javax.jms.<%=msgType%>Connection connection<%=cid%>;
-			javax.jms.<%=msgType%>Session session<%=cid%>;
-			javax.jms.<%=msgType%> topic<%=cid%>;
-			java.util.Queue<String> msgQueue<%=cid%>=null;	
-			<%
-			if (isLog4jEnabled) {
-			%>
-				private static org.apache.log4j.Logger log = null;
-			<%
-			}
-			%>
-			public HelloInput(String factoryJNDI, String topicJNDI) throws javax.jms.JMSException, javax.naming.NamingException{
-				msgQueue<%=cid%>=new java.util.LinkedList<String>();
-				java.util.Hashtable props<%=cid%>=new java.util.Hashtable();
-				props<%=cid%>.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY,"org.jnp.interfaces.NamingContextFactory");
-				props<%=cid%>.put(javax.naming.Context.PROVIDER_URL, <%=host%>+":"+<%=port%>);
-				props<%=cid%>.put("java.naming.rmi.security.manager", "yes");
-				props<%=cid%>.put(javax.naming.Context.URL_PKG_PREFIXES, "org.jboss.naming");
-				props<%=cid%>.put("java.naming.factory.url.pkgs","org.jboss.naming:org.jnp.interfaces");	
-				javax.naming.Context context<%=cid%>=new javax.naming.InitialContext(props<%=cid%>);
-				javax.jms.<%=msgType%>ConnectionFactory factory<%=cid%>=(javax.jms.<%=msgType%>ConnectionFactory)context<%=cid%>.lookup(factoryJNDI);
-				<%
-				if(isLog4jEnabled){
-				%>	
-					log.info("<%=cid%> - Attempt to create <%=msgType%> connection...;
-				<%
-				}
-				%>	
-				connection<%=cid%>=factory<%=cid%>.create<%=msgType%>Connection();
-				<%
-				if(isLog4jEnabled){
-				%>	
-					log.info("<%=cid%> - Created successfully.");
-					log.info("<%=cid%> - Creating a <%=msgType%> session...");
-				<%
-				}
-				%>
-				session<%=cid%>=connection<%=cid%>.create<%=msgType%>Session(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
-				<%
-				if(isLog4jEnabled){
-				%>	
-					log.info("<%=cid%> - Created successfully.");
-				<%
-				}
-				%>
-				topic<%=cid%>=(javax.jms.<%=msgType%>)context<%=cid%>.lookup(topicJNDI);
-
-				<%	
-				if(("Queue").equals(msgType)){
-				%>
-					javax.jms.<%=msgType%>Receiver receiver<%=cid%>=session<%=cid%>.createReceiver(topic<%=cid%>);
-					receiver<%=cid%>.setMessageListener(this);
-				<%
-				}else{
-				%>
-					javax.jms.<%=msgType%>Subscriber subscriber<%=cid%>=session<%=cid%>.createSubscriber(topic<%=cid%>);
-					subscriber<%=cid%>.setMessageListener(this);
-				<%
-				}
-				if(isLog4jEnabled){
-				%>	
-					log.info("<%=cid%> - Activating the connection...");
-				<%
-				}
-				%>
-				connection<%=cid%>.start();
-			    <%
-				if(isLog4jEnabled){
-				%>	
-					log.info("<%=cid%> - Activated successfully.");
-				<%
-				}
-				%>
-			}
-	
-			public void onMessage(javax.jms.Message m){
-				try {
-					String msg<%=cid%>=((javax.jms.TextMessage)m).getText();
-					msgQueue<%=cid%>.add(msg<%=cid%>);
-				} catch (javax.jms.JMSException e) {
-					<%
-					if(isLog4jEnabled){
-					%>	
-						log.error("<%=cid%> - Could not get text message:" + e);
-					<%
-					}
-					%>
-					System.err.println("Could not get text message:" + e);
-					e.printStackTrace();
-				}
-			}
-			
-			public void close() throws javax.jms.JMSException{
-				<%
-				if (isLog4jEnabled) {
-				%>
-					log.info("<%=cid%> - Closing connection...");
-				<%
-				}
-				%>
-				session<%=cid%>.close();
-				connection<%=cid%>.close();
-				<%	
-				if (isLog4jEnabled) {
-				%>
-					log.info("<%=cid%> - Closed successfully.");
-				<%
-				}
-	            %>
-			}	
-			<%
-			if (isLog4jEnabled) {
-			%>
-				public void setLog(org.apache.log4j.Logger log){
-					this.log=log;
-				}
-			<%
-			}
-			%>
-		}
-		
-		HelloInput input<%=cid%>=null;
-		try {
-		//begin part
-			input<%=cid%>=new HelloInput("<%if(("Topic").equals(msgType)){%>TopicConnectionFactory<%}else{%>ConnectionFactory<%}%>",<%=from%>);			
-		} catch (java.lang.Exception e) {
-			<%
-			if(isLog4jEnabled){
-			%>	
-				log.error("<%=cid%> - An exception occurred while testing HelloSubscriber:" + e);
-			<%
-			}
-			%>
-			System.err.println("An exception occurred while testing HelloSubscriber:" + e);
-			e.printStackTrace();
-		}
-		<%
-		if(isLog4jEnabled){
-		%>	
-			log.info("<%=cid%> - Ready to receive message.");
-			log.info("<%=cid%> - Waiting...");
-		<%
-		}
-		%>	
-		System.out.println("Ready to receive message");
-		System.out.println("Waiting...");	
-			
-		Boolean flag<%=cid%>=true;
-		while(flag<%=cid%>){
-			while(!(input<%=cid%>.msgQueue<%=cid%>.size()==0)){
-				String msg<%=cid%>=(String)input<%=cid%>.msgQueue<%=cid%>.poll();
-	
-<%
-				List< ? extends IConnection> conns = node.getOutgoingSortedConnections();
-				List<IMetadataColumn> columnList = metadata.getListColumns();
-				for(IConnection conn:conns){
-					if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.MAIN)) {
-				 		String firstConnName = conn.getName();
-%>
-
-						<%=firstConnName%>.from=<%=from%>;	
-						<%=firstConnName%>.message=msg<%=cid%>;	
-			
-<%
-					}
-				}
-	}  //server judgement   /***WebSphere MQ*****/
-	else{
-		String channel=ElementParameterParser.getValue(node, "__CHANNEL__");
-		String qm=ElementParameterParser.getValue(node, "__QM__");
-		String queue = ElementParameterParser.getValue(node, "__QUEUE__");
-		String idMask = ElementParameterParser.getValue(node, "__IDMASK__");
-%>
-		java.util.List<String> idList_<%=cid%> = new java.util.ArrayList<String>();
-	
-		java.util.Hashtable properties_<%=cid%>=new java.util.Hashtable();
-		properties_<%=cid%>.put("hostname", <%=host%>);
-		properties_<%=cid%>.put("port", Integer.valueOf(<%=port%>));
-		properties_<%=cid%>.put("channel", <%=channel%>);
-		properties_<%=cid%>.put("CCSID", new Integer(1208));
-		properties_<%=cid%>.put("transport","MQSeries");
-		
+	<%
+	if(("WebSphere").equals(serverType)){ 
+	%>
 		com.ibm.mq.MQQueueManager qMgr_<%=cid%>=null;
 		com.ibm.mq.MQQueue remoteQ_<%=cid%>=null;
-		try{
+		java.util.List<String> idList_<%=cid%> = new java.util.ArrayList<String>();
+		try{	
+			<%
+			if(isExistConnection){
+				%>
+				qMgr_<%=cid%> = (com.ibm.mq.MQQueueManager)globalMap.get("qMgr_<%=connection%>");
+			<%
+			}else{
+				String channel=ElementParameterParser.getValue(node, "__CHANNEL__");
+				String qm=ElementParameterParser.getValue(node, "__QM__");
+				%>
+				java.util.Hashtable properties_<%=cid%>=new java.util.Hashtable();
+				properties_<%=cid%>.put("hostname", <%=host%>);
+				properties_<%=cid%>.put("port", Integer.valueOf(<%=port%>));
+				properties_<%=cid%>.put("channel", <%=channel%>);
+				properties_<%=cid%>.put("CCSID", new Integer(1208));
+				properties_<%=cid%>.put("transport","MQSeries");
+				<%
+				if(!(dbuser == null) && !("\"\"").equals(dbuser) && !("").equals(dbuser)) {
+				%>
+					properties_<%=cid%>.put("userID",<%=dbuser%>);
+					<%
+					String passwordFieldName = "__PASS__";
+					%>
+	
+					<%@ include file="@{org.talend.designer.components.localprovider}/components/templates/password.javajet"%>			
+			
+					properties_<%=cid%>.put("password",decryptedPassword_<%=cid%>);
+				<%
+				}
+				%>
+				qMgr_<%=cid%>=new com.ibm.mq.MQQueueManager(<%=qm%>,properties_<%=cid%>);
+			<%
+			}
+			String queue = ElementParameterParser.getValue(node, "__QUEUE__");
+			%>
 			int openOptions_<%=cid%>=com.ibm.mq.MQC.MQOO_FAIL_IF_QUIESCING | com.ibm.mq.MQC.MQOO_INPUT_AS_Q_DEF;
 	
 	    	com.ibm.mq.MQGetMessageOptions gmo_<%=cid%>=new com.ibm.mq.MQGetMessageOptions();
@@ -238,8 +95,7 @@ class="MomInput"
 				log.info("<%=cid%> - Waiting...");
 			<%
 			}
-			%>	
-	    	qMgr_<%=cid%>=new com.ibm.mq.MQQueueManager(<%=qm%>,properties_<%=cid%>);
+			%>
 	    	while(flag_<%=cid%>){
 	    		remoteQ_<%=cid%>=qMgr_<%=cid%>.accessQueue(<%=queue%>,openOptions_<%=cid%>);
 	    		com.ibm.mq.MQMessage inMessage_<%=cid%>=new com.ibm.mq.MQMessage();

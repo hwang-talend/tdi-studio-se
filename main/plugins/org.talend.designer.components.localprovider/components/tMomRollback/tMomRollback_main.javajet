@@ -3,14 +3,7 @@ imports="
     org.talend.core.model.process.INode 
     org.talend.core.model.process.ElementParameterParser 
     org.talend.designer.codegen.config.CodeGeneratorArgument
-" 
-%>
-
-<%@ jet 
-imports="
-    org.talend.core.model.process.INode 
-    org.talend.core.model.process.ElementParameterParser 
-    org.talend.designer.codegen.config.CodeGeneratorArgument
+    org.talend.core.model.utils.NodeUtil
 " 
 %>
 
@@ -24,7 +17,15 @@ imports="
     
     boolean close = ("true").equals(ElementParameterParser.getValue(node,"__CLOSE__"));
 
-	String serverType=ElementParameterParser.getValue(node, "__SERVER__");
+    INode connectionNode = NodeUtil.getNodeByUniqueName(node.getProcess(),connectionCid,true);
+    
+    boolean isUseConnection = ("true").equals(ElementParameterParser.getValue(connectionNode, "__USE_CONNECTION__"));
+    
+    if(isUseConnection){
+    	String realConnNodeName = ElementParameterParser.getValue(connectionNode,"__CONNECTION__");
+    	connectionNode = NodeUtil.getNodeByUniqueName(node.getProcess(),realConnNodeName);
+    }
+    String serverType=ElementParameterParser.getValue(connectionNode, "__SERVER__");
 	
 	final boolean isLog4jEnabled = ("true").equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
 	

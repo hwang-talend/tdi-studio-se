@@ -252,20 +252,26 @@
 
   <CODEGENERATION>
     <IMPORTS>
-      <IMPORT NAME="JBOSS REMOTING" MODULE="jboss-remoting.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-remoting.jar" REQUIRED="true" />
-      <IMPORT NAME="JNP-CLIENT" MODULE="jnp-client.jar" REQUIRED="true" />
+      
+      <!-- ActiveMQ -->
+      <IMPORT NAME="ACTIVEMQ LIB" MODULE="activemq-all-5.10.0.jar" UrlPath="platform:/plugin/org.talend.libraries.apache/lib/activemq-all-5.10.0.jar"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
+      
+      <!-- JBOSS -->
+      <IMPORT NAME="JAVA_SSIST" MODULE="javassist.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="TROVE" MODULE="trove.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS MDR" MODULE="jboss-mdr.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-mdr.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JNP-CLIENT" MODULE="jnp-client.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS COMMON" MODULE="jboss-common-core.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-common-core.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS AOP" MODULE="jboss-aop.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-aop.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS REMOTING" MODULE="jboss-remoting.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-remoting.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS MESSAGING CLIENT" MODULE="jboss-messaging-client.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-messaging-client.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="JBOSS MQ LIB" MODULE="jbossall-client.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jbossall-client.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="LOG4J" MODULE="log4j-1.2.15.jar" UrlPath="platform:/base/plugins/org.apache.log4j_1.2.15.v201012070815.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+
+	  <!-- Websphere MQ -->
       <IMPORT NAME="WEBSPHERE MQ LIB" MODULE="com.ibm.mq.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
       <IMPORT NAME="WEBSPHERE JMS LIB" MODULE="com.ibm.mqjms.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
       <IMPORT NAME="WEBSPHERE CONNECTOR" MODULE="websphere-connector-1_5.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
-      <IMPORT NAME="ACTIVEMQ LIB" MODULE="activemq-all-5.10.0.jar" UrlPath="platform:/plugin/org.talend.libraries.apache/lib/activemq-all-5.10.0.jar"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
-      <IMPORT NAME="JBOSS MESSAGING CLIENT" MODULE="jboss-messaging-client.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-messaging-client.jar" REQUIRED="true" />
-      <IMPORT NAME="JBOSS AOP" MODULE="jboss-aop.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-aop.jar" REQUIRED="true" />
-      <IMPORT NAME="JBOSS COMMON" MODULE="jboss-common-core.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-common-core.jar" REQUIRED="true" />
-      <IMPORT NAME="JBOSS MDR" MODULE="jboss-mdr.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-mdr.jar" REQUIRED="true" />
-      <IMPORT NAME="JAVA_SSIST" MODULE="javassist.jar" REQUIRED="true" />
-      <IMPORT NAME="TROVE" MODULE="trove.jar" REQUIRED="true" />
-      <IMPORT NAME="LOG4J" MODULE="log4j-1.2.15.jar" UrlPath="platform:/base/plugins/org.apache.log4j_1.2.15.v201012070815.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="TALENDMQRFH2" MODULE="talendMQRFH2.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
       <IMPORT NAME="Java Message Service" MODULE="jms.jar" UrlPath="platform:/plugin/org.talend.libraries.esb.ext/lib/jms.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
     </IMPORTS>

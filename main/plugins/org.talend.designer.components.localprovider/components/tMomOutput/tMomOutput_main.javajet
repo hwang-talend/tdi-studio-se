@@ -26,7 +26,16 @@ class="MomInput"
 	String msgBobyType =  ElementParameterParser.getValue(node, "__MESSAGE_BODY_TYPE__");
 	
 	boolean isSetJMSDestination = false;
-    boolean isUseSharedConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
+    boolean isUseExistConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
+    String connectionComponentName = ElementParameterParser.getValue(node, "__CONNECTION__");
+    if (isUseExistConnection) {
+		for (INode pNode : node.getProcess().getNodesOfType("tMomConnection")) {
+			if (pNode.getUniqueName().equals(connectionComponentName)) {
+				serverType=ElementParameterParser.getValue(pNode, "__SERVER__");
+			}	
+		}
+	}
+    
 	boolean setJmsHeader =  ("true").equals(ElementParameterParser.getValue(node, "__SET_JMS_HEADER__"));
 	List<Map<String,String>> jmsHeaders = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__JMS_HEADERS__");
 	
@@ -64,7 +73,7 @@ class="MomInput"
 					log.debug("<%=cid%> - Writing the record: " + (nb_line_<%=cid%>+1) + ".");
 				<%
 				}
-				if (isUseSharedConnection || ("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType)) {
+				if (("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType)) {
 				
 					/*-------------------1.is use message id.this functions just use map message type-------------------------------------*/
 					if(("true").equals(useMsgId)){

@@ -37,33 +37,42 @@
     <PARAMETER NAME="SERVER" FIELD="CLOSED_LIST" NUM_ROW="20">
       <ITEMS DEFAULT="ActiveMQ">
         <ITEM NAME="ACTIVEMQ" VALUE="ActiveMQ" />
+        <ITEM NAME="WEBSPHERE" VALUE="WebSphere" />
       </ITEMS>
     </PARAMETER>
 
-    <PARAMETER NAME="FAILOVER" FIELD="CHECK" NUM_ROW="15">
+    <PARAMETER NAME="FAILOVER" FIELD="CHECK" NUM_ROW="15" SHOW_IF="(SERVER == 'ACTIVEMQ')">
       <DEFAULT >false</DEFAULT>
     </PARAMETER>
     <PARAMETER NAME="SERVERS" FIELD="TABLE" NB_LINES="5" NUM_ROW="23"
-        SHOW_IF="FAILOVER == 'true'">
+        SHOW_IF="(SERVER == 'ACTIVEMQ') AND (FAILOVER == 'true')">
       <ITEMS>
         <ITEM NAME="SERVERS_HOST" FIELD="String" />
         <ITEM NAME="SERVERS_PORT" FIELD="String" />
       </ITEMS>
     </PARAMETER>
 
-    <PARAMETER NAME="SERVERADDRESS" FIELD="TEXT" NUM_ROW="20"
-        SHOW_IF="FAILOVER == 'false'">
+    <PARAMETER NAME="SERVERADDRESS" FIELD="TEXT" NUM_ROW="22"
+        SHOW_IF="((SERVER == 'ACTIVEMQ' and FAILOVER == 'false') OR (SERVER == 'WEBSPHERE'))">
       <DEFAULT>"localhost"</DEFAULT>
     </PARAMETER>
-    <PARAMETER NAME="SERVERPORT" FIELD="TEXT" NUM_ROW="20"
-        SHOW_IF="FAILOVER == 'false'">
-      <DEFAULT>61616</DEFAULT>
+    <PARAMETER NAME="SERVERPORT" FIELD="TEXT" NUM_ROW="22"
+        SHOW_IF="((SERVER == 'ACTIVEMQ' and FAILOVER == 'false') OR (SERVER == 'WEBSPHERE'))">
+      <DEFAULT IF="(SERVER == 'WEBSPHERE')">"1414"</DEFAULT>
+      <DEFAULT IF="(SERVER == 'ACTIVEMQ')">"61616"</DEFAULT>
     </PARAMETER>
 
     <PARAMETER NAME="USER" FIELD="TEXT" REPOSITORY_VALUE="USERNAME" REQUIRED="false" NUM_ROW="25">
       <DEFAULT>""</DEFAULT>
     </PARAMETER>
     <PARAMETER NAME="PASS" FIELD="PASSWORD" REPOSITORY_VALUE="PASSWORD" REQUIRED="false" NUM_ROW="25">
+      <DEFAULT>""</DEFAULT>
+    </PARAMETER>
+    
+    <PARAMETER NAME="CHANNEL" FIELD="TEXT" NUM_ROW="35" SHOW_IF="(SERVER == 'WEBSPHERE')">
+      <DEFAULT>"DC.SVRCONN"</DEFAULT>
+    </PARAMETER>
+    <PARAMETER NAME="QM" FIELD="TEXT" NUM_ROW="40" SHOW_IF="(SERVER == 'WEBSPHERE')">
       <DEFAULT>""</DEFAULT>
     </PARAMETER>
 
@@ -96,11 +105,14 @@
 
   <CODEGENERATION>
     <IMPORTS>
-      <IMPORT NAME="JNP-CLIENT" MODULE="jnp-client.jar" REQUIRED="true" />
+      
       <IMPORT NAME="ACTIVEMQ LIB" MODULE="activemq-all-5.10.0.jar" UrlPath="platform:/plugin/org.talend.libraries.apache/lib/activemq-all-5.10.0.jar" REQUIRED_IF="SERVER == 'ACTIVEMQ'" />
-      <IMPORT NAME="JAVA_SSIST" MODULE="javassist.jar" REQUIRED="true" />
-      <IMPORT NAME="TROVE" MODULE="trove.jar" REQUIRED="true" />
-      <IMPORT NAME="LOG4J" MODULE="log4j-1.2.15.jar" UrlPath="platform:/base/plugins/org.apache.log4j_1.2.15.v201012070815.jar" REQUIRED="false" />
+      
+      <IMPORT NAME="WEBSPHERE MQ LIB" MODULE="com.ibm.mq.jar" REQUIRED_IF="(SERVER == 'WEBSPHERE')" />
+	  <IMPORT NAME="WEBSPHERE JMS LIB" MODULE="com.ibm.mqjms.jar" REQUIRED_IF="(SERVER == 'WEBSPHERE')" />
+	  <IMPORT NAME="WEBSPHERE CONNECTOR" MODULE="websphere-connector-1_5.jar" REQUIRED_IF="(SERVER == 'WEBSPHERE')" />
+	  <IMPORT NAME="TALENDMQRFH2" MODULE="talendMQRFH2.jar" REQUIRED_IF="(SERVER == 'WEBSPHERE')" />
+	  <IMPORT NAME="Java Message Service" MODULE="jms.jar" UrlPath="platform:/plugin/org.talend.libraries.esb.ext/lib/jms.jar" REQUIRED_IF="(SERVER == 'WEBSPHERE')" />
     </IMPORTS>
   </CODEGENERATION>
 

@@ -9,7 +9,7 @@
 <%
 CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
 INode node = (INode)codeGenArgument.getArgument();
-boolean isUseSharedConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
+boolean isUseExistConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
 String cid = node.getUniqueName();
 String serverType=ElementParameterParser.getValue(node, "__SERVER__");
 boolean transacted = "true".equals(ElementParameterParser.getValue(node, "__IS_TRANSACTED__"));
@@ -20,7 +20,7 @@ boolean isCommitRollback = (!node.getProcess().getNodesOfType("tMomCommit").isEm
 final boolean isLog4jEnabled = ("true").equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
  
 
-if (isUseSharedConnection) {
+if (isUseExistConnection) {
 	for (INode pNode : node.getProcess().getNodesOfType("tMomConnection")) {
 		if (pNode.getUniqueName().equals(connectionComponentName)) {
 			transacted = "true".equals(ElementParameterParser.getValue(pNode, "__IS_TRANSACTED__")); 
@@ -29,7 +29,7 @@ if (isUseSharedConnection) {
 	}
 }
 
-if(("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType) || isUseSharedConnection){
+if(("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType)){
 	String msgType = ElementParameterParser.getValue(node, "__MSGTYPE__");
 	if( ("JBoss").equals(serverType) || ( ("ActiveMQ").equals(serverType)) ){
 		// if no commmit or rollback component exists and set transacted - commit session
@@ -61,7 +61,7 @@ if(("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType) || isUseShare
 			log.info("<%=cid%> - Closed successfully.");
 		<%
 		}
-        if (!isCommitRollback && !isUseSharedConnection) {
+        if (!isCommitRollback && !isUseExistConnection) {
         	if (isLog4jEnabled) {
 			%>
 				log.info("<%=cid%> - Closing connection...");
@@ -79,7 +79,7 @@ if(("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType) || isUseShare
 			}
 		}
 	}
-	if((("ActiveMQ").equals(serverType) || isUseSharedConnection) && !isCommitRollback && transacted){
+	if(("ActiveMQ").equals(serverType) && !isCommitRollback && transacted){
 	%>
 		resourceMap.put("finish_<%=cid%>", true); 
 	<%
@@ -91,17 +91,21 @@ if(("JBoss").equals(serverType) || ("ActiveMQ").equals(serverType) || isUseShare
 		globalMap.put("qMgr_<%=cid%>",qMgr_<%=cid%>);
 	<%
 	} else {
-		if (isLog4jEnabled) {
+		if (!isUseExistConnection && isLog4jEnabled && isCommitRollback) {
 		%>
 			log.info("<%=cid%> - Disconnecting connection...");
 		<%
 		}
 		%>
 		System.out.println("Closing connection");
-		remoteQ_<%=cid%>.close();
-		qMgr_<%=cid%>.disconnect();
 		<%
-		if (isLog4jEnabled) {
+		if(!isUseExistConnection && isCommitRollback){
+		%>
+			remoteQ_<%=cid%>.close();
+			qMgr_<%=cid%>.disconnect();
+		<%
+		}
+		if (!isUseExistConnection && isLog4jEnabled && isCommitRollback) {
 		%>
 			log.info("<%=cid%> - Disconnected successfully.");
 		<%

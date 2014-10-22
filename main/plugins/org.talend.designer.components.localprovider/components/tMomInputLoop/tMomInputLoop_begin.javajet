@@ -14,7 +14,7 @@ imports="
 	INode node = (INode)codeGenArgument.getArgument();
 	String cid = node.getUniqueName();
 	cid = cid.replaceAll("_Loop", "");
-    boolean isUseConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
+    boolean isUseExistConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_CONNECTION__"));
     String connectionComponentName = ElementParameterParser.getValue(node, "__CONNECTION__");
 	String serverType=ElementParameterParser.getValue(node, "__SERVER__");
 	String host=ElementParameterParser.getValue(node, "__SERVERADDRESS__");
@@ -45,12 +45,12 @@ imports="
         boolean isCommitRollback = (!node.getProcess().getNodesOfType("tMomCommit").isEmpty()
 	|| !node.getProcess().getNodesOfType("tMomRollback").isEmpty());
     	
-        if (isUseConnection) {
+    if (isUseExistConnection) {
 		for (INode pNode : node.getProcess().getNodesOfType("tMomConnection")) {
 			if (pNode.getUniqueName().equals(connectionComponentName)) {
 				transacted = "true".equals(ElementParameterParser.getValue(pNode, "__IS_TRANSACTED__")); 
 				serverType = ElementParameterParser.getValue(pNode, "__SERVER__");
-                           	failover =  ("true").equals(ElementParameterParser.getValue(pNode, "__FAILOVER__"));
+                failover =  ("true").equals(ElementParameterParser.getValue(pNode, "__FAILOVER__"));
 			}	
 		}
 	}
@@ -67,7 +67,7 @@ imports="
 	javax.jms.Connection connection_<%=cid %> = null;
 	try {
 
-        <% if (isUseConnection) { %>
+        <% if (isUseExistConnection && ("ActiveMQ").equals(serverType)) { %>
 		    connection_<%=cid %> = null;
 		    javax.jms.Session session_<%=cid %> = null;
             try {
@@ -165,7 +165,7 @@ imports="
 			    javax.jms.Message message_<%=cid%>;
 			    while ((message_<%=cid%> = consumer_<%=cid %>.receive(<%=receiveTimeOut%>*1000)) != null) {
 
-				<%if(("ActiveMQ").equals(serverType) /*&& !isUseConnection*/ && !isCommitRollback && transacted){%>
+				<%if(("ActiveMQ").equals(serverType) /*&& !isUseExistConnection*/ && !isCommitRollback && transacted){%>
 		        	try {   // For rollback
 		
 				<%
@@ -211,7 +211,7 @@ imports="
 			%>
 
 			
-		<%} else if (("JBoss").equals(serverType)||("ActiveMQ").equals(serverType)) {
+		<%} else if (("JBoss").equals(serverType)||(!isUseExistConnection && ("ActiveMQ").equals(serverType))) {
 	
 			/*---------------------------------------1.initial jms connection factry---------------------------------*/ 
 			if(("JBoss").equals(serverType) ){ // server judgement
@@ -389,7 +389,7 @@ imports="
 					javax.jms.Message message_<%=cid%>;
 					while ((message_<%=cid%> = consumer_<%=cid %>.receive()) != null) {
 	
-					<%if(("ActiveMQ").equals(serverType) /*&& !isUseConnection*/ && !isCommitRollback && transacted){%>
+					<%if(("ActiveMQ").equals(serverType) /*&& !isUseExistConnection*/ && !isCommitRollback && transacted){%>
 			        	try {   // For rollback
 			
 					<%
@@ -430,7 +430,7 @@ imports="
 				    javax.jms.Message message_<%=cid%>;
 				    while ((message_<%=cid%> = consumer_<%=cid %>.receive(<%=receiveTimeOut%>*1000)) != null) {
 	
-					<%if(("ActiveMQ").equals(serverType) /*&& !isUseConnection*/ && !isCommitRollback && transacted){%>
+					<%if(("ActiveMQ").equals(serverType) /*&& !isUseExistConnection*/ && !isCommitRollback && transacted){%>
 			        	try {   // For rollback
 					<%
 					}
@@ -474,9 +474,42 @@ imports="
 			%>
 		
 		<%
-		} else { //server judgement   /***WebSphere MQ*****/
-			String channel=ElementParameterParser.getValue(node, "__CHANNEL__");
-			String qm=ElementParameterParser.getValue(node, "__QM__");
+		} else if(("WebSphere").equals(serverType)){ //server judgement   /***WebSphere MQ*****/
+		%>
+			com.ibm.mq.MQQueueManager qMgr_<%=cid%>=null;	
+			<%
+			if(isUseExistConnection){
+				String connection = ElementParameterParser.getValue(node, "__CONNECTION__");
+				%>
+				qMgr_<%=cid%> = (com.ibm.mq.MQQueueManager)globalMap.get("qMgr_<%=connection%>");
+			<%
+			}else{
+				String channel=ElementParameterParser.getValue(node, "__CHANNEL__");
+				String qm=ElementParameterParser.getValue(node, "__QM__");
+				%>
+				java.util.Hashtable properties<%=cid%>=new java.util.Hashtable();
+				properties<%=cid%>.put("hostname", <%=host%>);
+				properties<%=cid%>.put("port", Integer.valueOf(<%=port%>));
+				properties<%=cid%>.put("channel", <%=channel%>);
+				properties<%=cid%>.put("CCSID", new Integer(1208));
+				properties<%=cid%>.put("transport","MQSeries");
+				<%
+				if(!(dbuser == null) && !("\"\"").equals(dbuser) && !("").equals(dbuser)) {
+				%>
+					properties<%=cid%>.put("userID",<%=dbuser%>);
+					<%
+					String passwordFieldName = "__PASS__";
+					%>
+
+					<%@ include file="@{org.talend.designer.components.localprovider}/components/templates/password.javajet"%>			
+			
+					properties<%=cid%>.put("password",decryptedPassword_<%=cid%>);
+				<%
+				}
+				%>
+				qMgr_<%=cid%>=new com.ibm.mq.MQQueueManager(<%=qm%>,properties<%=cid%>);
+			<%
+			}
 			String queue = ElementParameterParser.getValue(node, "__QUEUE__");
 			boolean isRollback = ("true").equals(ElementParameterParser.getValue(node, "__ROLLBACK__"));
 			boolean isCommit = ("true").equals(ElementParameterParser.getValue(node, "__COMMIT__"));
@@ -486,36 +519,13 @@ imports="
 			isCommit = isCommit && !isBrowse;
 			isBrowse = isBrowse && !isRollback && !isCommit;
 			%>
-			java.util.Hashtable properties<%=cid%>=new java.util.Hashtable();
-			properties<%=cid%>.put("hostname", <%=host%>);
-			properties<%=cid%>.put("port", Integer.valueOf(<%=port%>));
-			properties<%=cid%>.put("channel", <%=channel%>);
-			properties<%=cid%>.put("CCSID", new Integer(1208));
-			properties<%=cid%>.put("transport","MQSeries");
+			com.ibm.mq.MQQueue remoteQ<%=cid%>=null;
 			<%
 			if(needSSLCipher){
 			%>
 				com.ibm.mq.MQEnvironment.sslCipherSuite = "<%=sslCipher%>";
 			<%
 			}
-			if(!(dbuser == null) && !("\"\"").equals(dbuser) && !("").equals(dbuser)) {
-			%>
-				properties<%=cid%>.put("userID",<%=dbuser%>);
-				
-				<%
-				String passwordFieldName = "__PASS__";
-				%>
-	
-				<%@ include file="@{org.talend.designer.components.localprovider}/components/templates/password.javajet"%>			
-				
-				properties<%=cid%>.put("password",decryptedPassword_<%=cid%>);
-			<%
-			}
-			%>
-	
-			com.ibm.mq.MQQueueManager qMgr<%=cid%>=null;
-			com.ibm.mq.MQQueue remoteQ<%=cid%>=null;
-			<%
 			if(("true").equals(useMsgId)){
 			%>
 				String msgId_<%=cid%> = <%=msgId%>;
@@ -551,8 +561,7 @@ imports="
 				com.ibm.mq.MQException.log = null;
 				boolean flag<%=cid%>=true;
 			
-				qMgr<%=cid%>=new com.ibm.mq.MQQueueManager(<%=qm%>,properties<%=cid%>);
-				remoteQ<%=cid%>=qMgr<%=cid%>.accessQueue(<%=queue%>,openOptions<%=cid%>);
+				remoteQ<%=cid%>=qMgr_<%=cid%>.accessQueue(<%=queue%>,openOptions<%=cid%>);
 	
 			<%
 			if(("false").equals(kListen)) {
@@ -648,7 +657,7 @@ imports="
 			}
 			if(isCommit){
 			%>
-				qMgr<%=cid%>.commit();
+				qMgr_<%=cid%>.commit();
 			<%
 			}
 				

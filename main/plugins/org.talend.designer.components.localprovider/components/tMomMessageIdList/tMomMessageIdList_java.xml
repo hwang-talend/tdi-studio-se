@@ -33,74 +33,58 @@
   </CONNECTORS>
 
   <PARAMETERS>
-
-    <!-- PARAMETER NAME="KEEPLISTENING" FIELD="CHECK" SHOW="true" NUM_ROW="10">
-      <DEFAULT IF="(SERVER == 'JBOSS')">true</DEFAULT>
-      <DEFAULT IF="(SERVER == 'WEBSPHERE')">false</DEFAULT>
-    </PARAMETER -->
-
-    <PARAMETER NAME="TIMEOUT" FIELD="TEXT" NUM_ROW="10"
-        SHOW_IF="(SERVER == 'JBOSS' and KEEPLISTENING == 'TRUE')">
-      <DEFAULT>1</DEFAULT>
+  
+  	<PARAMETER NAME="USE_CONNECTION" FIELD="CHECK" NUM_ROW="1">
+      <DEFAULT>false</DEFAULT>
     </PARAMETER>
+    
+    <PARAMETER NAME="CONNECTION" FIELD="COMPONENT_LIST" REQUIRED="true" FILTER="tMomConnection" NUM_ROW="1"
+        SHOW_IF="USE_CONNECTION == 'true'" DYNAMIC_SETTINGS="true" />
+        
+    <PARAMETER NAME="NOTE_CUSTOMER" FIELD="LABEL" NUM_ROW="2" COLOR="255;0;0" 
+		SHOW_IF="((USE_CONNECTION == 'true') AND (#LINK@NODE.CONNECTION.SERVER != 'WEBSPHERE'))">
+		<DEFAULT>Connection server type is incorrect!
+This component only support Websphere MQ currently!
+		</DEFAULT>
+	</PARAMETER>
 
-    <PARAMETER NAME="SERVER" FIELD="CLOSED_LIST" NUM_ROW="20">
+    <PARAMETER NAME="SERVER" FIELD="CLOSED_LIST" NUM_ROW="20" SHOW_IF="(USE_CONNECTION == 'false')">
       <ITEMS DEFAULT="WEBSPHERE">
         <ITEM NAME="WEBSPHERE" VALUE="WebSphere" />
-        <!-- ITEM NAME="JBOSS" VALUE="JBoss" / -->
       </ITEMS>
     </PARAMETER>
 
-    <PARAMETER NAME="SERVERADDRESS" FIELD="TEXT" NUM_ROW="20">
+    <PARAMETER NAME="SERVERADDRESS" FIELD="TEXT" NUM_ROW="20" SHOW_IF="(USE_CONNECTION == 'false')">
       <DEFAULT>"localhost"</DEFAULT>
     </PARAMETER>
 
-    <PARAMETER NAME="SERVERPORT" FIELD="TEXT" NUM_ROW="20">
-      <DEFAULT IF="(SERVER == 'JBOSS')">"1099"</DEFAULT>
+    <PARAMETER NAME="SERVERPORT" FIELD="TEXT" NUM_ROW="20" SHOW_IF="(USE_CONNECTION == 'false')">
       <DEFAULT IF="(SERVER == 'WEBSPHERE')">"1414"</DEFAULT>
     </PARAMETER>
 
-    <PARAMETER NAME="FROM" FIELD="TEXT" SHOW="true" NUM_ROW="30"
-        SHOW_IF="(SERVER == 'JBOSS')">
-      <DEFAULT>""</DEFAULT>
-    </PARAMETER>
-
-    <PARAMETER NAME="MSGTYPE" FIELD="CLOSED_LIST" NUM_ROW="30"
-        SHOW_IF="(SERVER == 'JBOSS')">
-      <ITEMS DEFAULT="TOPIC">
-        <ITEM NAME="TOPIC" VALUE="Topic" />
-        <ITEM NAME="QUEUE" VALUE="Queue" />
-      </ITEMS>
-    </PARAMETER>
-
     <PARAMETER NAME="CHANNEL" FIELD="TEXT" NUM_ROW="30"
-        SHOW_IF="(SERVER == 'WEBSPHERE')">
+        SHOW_IF="(USE_CONNECTION == 'false') AND (SERVER == 'WEBSPHERE')">
       <DEFAULT>"DC.SVRCONN"</DEFAULT>
     </PARAMETER>
 
     <PARAMETER NAME="QM" FIELD="TEXT" NUM_ROW="50"
-        SHOW_IF="(SERVER == 'WEBSPHERE')">
+         SHOW_IF="(USE_CONNECTION == 'false') AND (SERVER == 'WEBSPHERE')">
       <DEFAULT>""</DEFAULT>
     </PARAMETER>
 
     <PARAMETER NAME="QUEUE" FIELD="TEXT" NUM_ROW="50"
-        SHOW_IF="(SERVER == 'WEBSPHERE')">
+        SHOW_IF="(((USE_CONNECTION == 'true') and (#LINK@NODE.CONNECTION.SERVER== 'WEBSPHERE')) OR ((USE_CONNECTION == 'false') and (SERVER == 'WEBSPHERE')))">
       <DEFAULT>""</DEFAULT>
     </PARAMETER>
-
-    <!-- PARAMETER NAME="IDMASK" FIELD="TEXT" NUM_ROW="60">
-      <DEFAULT>""</DEFAULT>
-    </PARAMETER -->
 
   </PARAMETERS>
 
   <CODEGENERATION>
    <IMPORTS>
-       <IMPORT NAME="JBOSSALL-CLIENT" MODULE="jbossall-client.jar" UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jbossall-client.jar" REQUIRED="true" />
-       <IMPORT NAME="JNP-CLIENT" MODULE="jnp-client.jar" REQUIRED="true" />
-       <IMPORT NAME="MQ" MODULE="com.ibm.mq.jar" REQUIRED="true" />
-       <IMPORT NAME="MQJMS" MODULE="com.ibm.mqjms.jar" REQUIRED="true" />
-       <IMPORT NAME="Java Message Service" MODULE="jms.jar" UrlPath="platform:/plugin/org.talend.libraries.esb.ext/lib/jms.jar" REQUIRED="true" />
+       <IMPORT NAME="MQ" MODULE="com.ibm.mq.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
+       <IMPORT NAME="MQJMS" MODULE="com.ibm.mqjms.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
+        <IMPORT NAME="WEBSPHERE CONNECTOR" MODULE="websphere-connector-1_5.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
+       <IMPORT NAME="Java Message Service" MODULE="jms.jar" UrlPath="platform:/plugin/org.talend.libraries.esb.ext/lib/jms.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
      </IMPORTS>
   </CODEGENERATION>
 
