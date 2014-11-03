@@ -20,8 +20,11 @@ imports="
 	%>
 
 			}
+			if(!objects_<%=cid%>.isTruncated()){
+				break;
+			}
 			objects_<%=cid%> = conn_<%=cid%>.listNextBatchOfObjects(objects_<%=cid%>);
-		} while (objects_<%=cid%>.isTruncated());
+		}
 			<%
 		    if(!listAll){
 			%>

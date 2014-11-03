@@ -77,7 +77,7 @@ imports="
 			}
 			if(listAll || buckets.size()>0){
 			%>
-				do {
+				while(true){
 					java.util.List<com.amazonaws.services.s3.model.S3ObjectSummary> list_objects_<%=cid%> = objects_<%=cid%>.getObjectSummaries();
 					if(list_objects_<%=cid%>.size()>0){
 						nb_bucket_<%=cid%>++;
