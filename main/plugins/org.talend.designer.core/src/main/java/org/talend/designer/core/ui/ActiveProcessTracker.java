@@ -294,6 +294,9 @@ public class ActiveProcessTracker implements IPartListener {
             }
         }
         IProcess2 process = getJobFromActivatedEditor(part);
+        if (part instanceof AbstractMultiPageTalendEditor && process instanceof Process) {
+            ((Process) process).setEditor((AbstractMultiPageTalendEditor) part);
+        }
         if (process != null && currentProcess != process && lastProcessOpened != process) {
             lastProcessOpened = process;
             addJobInProblemView(process);
@@ -303,7 +306,6 @@ public class ActiveProcessTracker implements IPartListener {
                 listener.focusOnJob(process);
             }
         }
-
     }
 
     /**
