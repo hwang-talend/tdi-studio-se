@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.talend.commons.ui.runtime.exception.ExceptionHandler;
 import org.talend.commons.ui.swt.cursor.CursorHelper;
+import org.talend.core.model.metadata.IMetadataTable;
 import org.talend.core.model.process.BlockCode;
 import org.talend.core.model.process.EConnectionType;
 import org.talend.core.model.process.HashConfiguration;
@@ -150,6 +151,13 @@ public class XmlMapComponent extends MapperExternalNode implements IHashableInpu
                 outputTree.setName(newName);
                 XmlMapUtil.updateXPathAndExpression(externalEmfData, expressionManager, outputTree.getNodes(),
                         outputTree.getName(), 1);
+            }
+        }
+        // Fix for TDI-31214,metadata Label maybe not useful except some UI, but still change to be the same as table
+        // name here
+        for (IMetadataTable table : getOriginalNode().getMetadataList()) {
+            if (oldName.equals(table.getLabel())) {
+                table.setLabel(newName);
             }
         }
     }
