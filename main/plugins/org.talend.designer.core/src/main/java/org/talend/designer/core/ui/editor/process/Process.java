@@ -1985,6 +1985,7 @@ public class Process extends Element implements IProcess2, IGEFProcess, ILastVer
         if (nc.getExternalNode() != null && nType.getNodeData() != null) {
             nc.getExternalNode().buildExternalData(EcoreUtil.copy(nType.getNodeData()));
             nc.setExternalData(nc.getExternalNode().getExternalData());
+            nc.getExternalNode().setOriginalNode(nc);
         }
 
         loadSchema(nc, nType);
