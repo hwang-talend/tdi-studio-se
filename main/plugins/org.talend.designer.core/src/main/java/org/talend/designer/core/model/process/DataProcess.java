@@ -82,6 +82,7 @@ import org.talend.designer.core.ui.editor.nodecontainer.NodeContainer;
 import org.talend.designer.core.ui.editor.nodes.Node;
 import org.talend.designer.core.ui.editor.process.Process;
 import org.talend.designer.core.utils.ValidationRulesUtil;
+import org.talend.designer.runprocess.ProcessorUtilities;
 import org.talend.repository.model.ComponentsFactoryProvider;
 import org.talend.repository.model.ExternalNodesFactory;
 import org.talend.repository.model.IProxyRepositoryFactory;
@@ -164,6 +165,12 @@ public class DataProcess implements IGeneratingProcess {
 
                 targetParam.setContextMode(sourceParam.isContextMode());
                 targetParam.setValue(sourceParam.getValue());
+                // if not OSGI build,simply consider the "SPECIFY_DATASOURCE_ALIAS" as false.
+                if (!ProcessorUtilities.isExportAsOSGI()) {
+                    if (targetParam.getName().equals("SPECIFY_DATASOURCE_ALIAS")) { //$NON-NLS-1$
+                        targetParam.setValue(Boolean.FALSE);
+                    }
+                }
                 if (sourceParam.getValue() instanceof List) {
                     List sourceList = (List) sourceParam.getValue();
                     List targetList = new ArrayList();
