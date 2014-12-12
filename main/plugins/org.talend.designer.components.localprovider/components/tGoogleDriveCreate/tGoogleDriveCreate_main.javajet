@@ -28,15 +28,15 @@ boolean useSSL = helper.getBoolParam("__USE_SSL__");
 String connection = ElementParameterParser.getValue(node,"__CONNECTION__");
 String connectionKey = "\"conn_" + connection+"\"";
 
-List< ? extends IConnection> outputConnections = node.getOutgoingSortedConnections();
-		
-String dataOutputConnection = null;	
+List<? extends IConnection> outputConnections = node.getOutgoingSortedConnections();
+
+String dataOutputConnection = null;
     for(IConnection conn : outputConnections) {
         if(conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {
         	dataOutputConnection = conn.getName();
         	break;
-        } // if(conn) end
-    } // for(conns) end
+        }
+    }
 
 
 String newFolderName = ElementParameterParser.getValue(node, "__NEW_FOLDER_NAME__");
@@ -94,38 +94,55 @@ String proxyPort = helper.getStringParam("__PROXY_PORT__");
 	<%=cid%>_client = (com.google.api.services.drive.Drive)globalMap.get(<%=connectionKey%>);
 <%}%>
 		String parentFolder_<%=cid %> = <%=folderName%>;
-		if(parentFolder_<%=cid %> == null || "".equals(parentFolder_<%=cid %>.trim()) )
+		if(parentFolder_<%=cid %> == null || "".equals(parentFolder_<%=cid %>.trim()))
 		{
 			throw new Exception("Parent Folder Name can not be null");
 		}
 
         com.google.api.services.drive.model.File <%=cid%>_createdFolder = new com.google.api.services.drive.model.File();
-		com.google.api.services.drive.model.File <%=cid%>_resultFile = new com.google.api.services.drive.model.File();
+		com.google.api.services.drive.model.File <%=cid%>_resultFile = null;
 		com.google.api.services.drive.Drive.Files.List <%=cid%>_listRequest =  <%=cid%>_client.files().list();
 		<%=cid%>_listRequest.setQ("title = '" + <%=folderName%> + "' and mimeType = 'application/vnd.google-apps.folder'");
 		com.google.api.services.drive.model.FileList <%=cid%>_files = <%=cid%>_listRequest.execute();
+		String parentFolderId_<%= cid %> = null;
+
 		if (<%=cid%>_files.getItems().size() > 1)
 		{
 			throw new Exception("More then one folder found with name \"" + <%=folderName%> + "\" ");
 		}
 		else if (<%=cid%>_files.getItems().isEmpty())
 		{
-			throw new Exception("No folder found with name \"" + <%=folderName%> + "\" ");
+			System.out.println("No folder found with name \"" + <%=folderName%> + "\",the folder will be created in the default root folder.");
+			<% /* Create the parent folder in the default root folder. */ %>
+			com.google.api.services.drive.model.File newParentFolder_<%= cid %> = new com.google.api.services.drive.model.File();
+		    newParentFolder_<%= cid %>.setParents(new java.util.ArrayList<com.google.api.services.drive.model.ParentReference>());
+		    newParentFolder_<%= cid %>.setMimeType("application/vnd.google-apps.folder"); 
+			newParentFolder_<%= cid %>.setTitle(<%= folderName %>);
+			<%=cid%>_resultFile = <%=cid%>_client.files().insert(newParentFolder_<%= cid %>).execute();
+			parentFolderId_<%= cid %> = <%=cid%>_resultFile.getId();
 		}
-		else
-		{
-	        <%=cid%>_createdFolder.setParents(java.util.Arrays.asList(new com.google.api.services.drive.model.ParentReference().setId(<%=cid%>_files.getItems().get(0).getId())));
+
+		if(null == parentFolderId_<%= cid %>){
+			parentFolderId_<%= cid %> = <%=cid%>_files.getItems().get(0).getId();
+		}
+
+		String subFolderId_<%= cid %> = null;
+		String subFolderName_<%= cid %> = <%= newFolderName %>;
+		if(null != subFolderName_<%= cid %> && !"".equals(subFolderName_<%= cid %>.trim())){
+			<% /* Create a sub folder in the specified parent folder.*/ %>
+	        <%=cid%>_createdFolder.setParents(java.util.Arrays.asList(new com.google.api.services.drive.model.ParentReference().setId(parentFolderId_<%= cid %>)));
 	        <%=cid%>_createdFolder.setMimeType("application/vnd.google-apps.folder"); 
-	    	<%=cid%>_createdFolder.setTitle(<%=newFolderName%>); 
-	
+	    	<%=cid%>_createdFolder.setTitle(subFolderName_<%= cid %>); 
+
 	        <%=cid%>_resultFile = <%=cid%>_client.files().insert(<%=cid%>_createdFolder).execute();
-	        <%
-			if(dataOutputConnection != null) {
-	        %>
-				<%=dataOutputConnection%>.parentFolderID = <%=cid%>_files.getItems().get(0).getId();
-				<%=dataOutputConnection%>.newFolderID =  <%=cid%>_resultFile.getId();
-	        <%}%>
-			globalMap.put("<%=cid%>_PARENTFOLDERID", <%=cid%>_files.getItems().get(0).getId());
-			globalMap.put("<%=cid%>_NEWFOLDERID", <%=cid%>_resultFile.getId());
+	        subFolderId_<%= cid %> = <%=cid%>_resultFile.getId();
 		}
-			
+        <%
+		if(dataOutputConnection != null) {
+        %>
+			<%=dataOutputConnection%>.parentFolderID = parentFolderId_<%= cid %>;
+			<%=dataOutputConnection%>.newFolderID = subFolderId_<%= cid %>;
+        <%}%>
+		globalMap.put("<%=cid%>_PARENTFOLDERID", parentFolderId_<%= cid %>);
+		globalMap.put("<%=cid%>_NEWFOLDERID", subFolderId_<%= cid %>);
+
