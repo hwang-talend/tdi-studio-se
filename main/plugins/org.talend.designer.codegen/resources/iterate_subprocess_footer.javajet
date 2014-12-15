@@ -83,6 +83,17 @@
 							talendThreadPool.setErrorThread(this);
 				            talendThreadPool.stopAllWorkers();
 	
+						} catch (java.lang.Error error){
+							this.status = "failure";
+							Integer localErrorCode = (Integer) (((java.util.Map) threadLocal.get()).get("errorCode"));
+							if (localErrorCode != null) {
+								if (this.errorCode == null || localErrorCode.compareTo(this.errorCode) > 0) {
+									this.errorCode = localErrorCode;
+								}
+							}					
+							this.error = error;				            		            
+							talendThreadPool.setErrorThread(this);
+				            talendThreadPool.stopAllWorkers();
 						} finally {
 							try{
 								<%=finallyPart%>

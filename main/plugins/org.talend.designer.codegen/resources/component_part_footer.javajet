@@ -342,6 +342,9 @@ end_Hash.put("<%=node.getUniqueName() %>", System.currentTimeMillis());
 		if(errorThread_<%=iterateTargetNodeName %>.exception!=null){
 			throw errorThread_<%=iterateTargetNodeName %>.exception;
 		}
+		if(errorThread_<%=iterateTargetNodeName %>.error!=null){
+			throw errorThread_<%=iterateTargetNodeName %>.error;
+		}
 	}else{				
 		Integer threadErrorCode = mtp_<%=iterateTargetNodeName %>.getTalendThreadResult().getErrorCode();
 		String threadStatus = mtp_<%=iterateTargetNodeName %>.getTalendThreadResult().getStatus();
