@@ -136,7 +136,7 @@ public class FileCopy {
                         if (index > 0) {
                             int end = index;
                             int start = index;
-                            while (sb.charAt(start) != '"') { //$NON-NLS-1$
+                            while (sb.charAt(start) != '"') {
                                 start--;
                             }
                             sb.replace(start + 1, end, "../../.."); //$NON-NLS-1$
@@ -156,8 +156,11 @@ public class FileCopy {
                     input.close();
                 }
                 if (temp.isDirectory()) { // copy subfolder
-                    copyComponentFolder(sourceComponentFolder + File.separator + file[i], targetComponentFolder + File.separator
-                            + file[i], modifySkeletonValue);
+                    // TDI-31436:Avoid case of copy infinite subfolder if target folder is under source folder
+                    if (!temp.getAbsolutePath().equals(targetComponentFolder)) {
+                        copyComponentFolder(sourceComponentFolder + File.separator + file[i], targetComponentFolder
+                                + File.separator + file[i], modifySkeletonValue);
+                    }
                 }
             }
         } catch (Exception e) {
