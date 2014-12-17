@@ -407,7 +407,7 @@ public class ConnectionFormComposite extends Composite {
 
         @Override
         public void modifyText(ModifyEvent e) {
-            fillBean();
+            fillBean(false);
             validateFields();
         }
     };
@@ -418,7 +418,7 @@ public class ConnectionFormComposite extends Composite {
         public void selectionChanged(SelectionChangedEvent e) {
             showHideDynamicsControls();
             validateFields();
-            fillBean();
+            fillBean(true);
             showHideTexts();
 
         }
@@ -485,7 +485,7 @@ public class ConnectionFormComposite extends Composite {
         }
     }
 
-    private void fillBean() {
+    private void fillBean(boolean cleanDynamicValue) {
         if (connection != null) {
             if (getRepository() != null) {
                 connection.setRepositoryId(getRepository().getId());
@@ -494,6 +494,9 @@ public class ConnectionFormComposite extends Composite {
 
                 Map<String, LabelText> map = dynamicControls.get(getRepository());
                 for (String fieldKey : map.keySet()) {
+                    if (cleanDynamicValue) {
+                        map.get(fieldKey).setText("");
+                    }
                     connFields.put(fieldKey, map.get(fieldKey).getText());
                 }
 
@@ -541,6 +544,13 @@ public class ConnectionFormComposite extends Composite {
         if (connection != null) {
             removeListeners();
             String repositoryId = connection.getRepositoryId();
+            if (repositoryId == null || "".equals(repositoryId)) {
+                if (getRepository() != null) {
+                    connection.setRepositoryId(getRepository().getId());
+                } else {
+                    connection.setRepositoryId(RepositoryConstants.REPOSITORY_LOCAL_ID);
+                }
+            }
             IRepositoryFactory repositoriyById = RepositoryFactoryProvider.getRepositoriyById(repositoryId);
             repositoryCombo.setSelection(new StructuredSelection(new Object[] { repositoriyById }));
 
