@@ -330,7 +330,10 @@ public class UpdateNodeParameterCommand extends Command {
                                         if (lastVersion != null) {
                                             Item item = lastVersion.getProperty().getItem();
                                             if (item != null) {
-                                                objectValue = service.getValue(item, repositoryValue, node);
+                                                Object objectValueFromESB = service.getValue(item, repositoryValue, node);
+                                                if (objectValueFromESB != null) {
+                                                    objectValue = objectValueFromESB;
+                                                }
                                             }
                                         }
                                     }
